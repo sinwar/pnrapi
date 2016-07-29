@@ -24,9 +24,10 @@ def get_correct_url():
         return False
 
 
+
 class PnrApi:
-    #url_pnr = get_correct_url()
-    url_pnr = "http://www.indianrail.gov.in/cgi_bin/inet_pnstat_cgi_10521.cgi"
+    url_pnr = get_correct_url()
+    #url_pnr = "http://www.indianrail.gov.in/cgi_bin/inet_pnstat_cgi_8238.cgi"
     headers = {
         "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0",
         "Host": "www.indianrail.gov.in",
@@ -55,7 +56,7 @@ class PnrApi:
             self.error = str(e)
             return False
         if r.status_code == 404:
-            self.error = "404 error, please mail contact@pnr.me to fix this issue"
+            self.error = "404 error, please mail premsinwar4@gmail.com to fix this issue"
             return False
         if r.text.find("Please try again later") > 0:
             self.error = "Service unavailable 23:30 to 00:30"
@@ -82,6 +83,10 @@ class PnrApi:
         else:
             self.error = "Some other error"
             return False
+
+    def perror(self):
+        if self.request == False:
+            return self.error
 
     def __getDetails(self, soup):
         #set pnr
@@ -156,6 +161,3 @@ class PnrApi:
 
     def get_json(self):
         return self.response_json
-
-
-Contact GitHub 
