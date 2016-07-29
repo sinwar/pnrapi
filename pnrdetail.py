@@ -17,4 +17,6 @@ def details(pnrnumber):
     else:
         k = p.error
         return k
-    
+        
+if __name__ == '__main__':
+    app.run()
