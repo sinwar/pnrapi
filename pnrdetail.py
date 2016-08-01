@@ -6,6 +6,7 @@ from datetime import datetime
 import mechanize
 import cookielib
 from flask import Flask
+from flask import jsonify
 
 # new app using flask
 app = Flask(__name__)
@@ -14,7 +15,7 @@ app = Flask(__name__)
 def api_root():
     return 'Developed by sinwar'
 
-@app.route('/pnr/<pnrnumber>')
+@app.route('/pnr/<pnrnumber>/')
 def details(pnrnumber):
     
     url_pnr = "http://www.indianrail.gov.in/pnr_Enq.html"
@@ -122,6 +123,7 @@ def details(pnrnumber):
     #get passenger_status
     response_json["passenger_status"] = passengers
 
+    response_json = jsonify(response_json)
     return response_json
 
 
