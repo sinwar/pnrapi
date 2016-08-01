@@ -3,37 +3,14 @@ import requests
 import re
 from random import randint
 from datetime import datetime
-
-
-def get_correct_url():
-    url = "http://www.indianrail.gov.in/pnr_Enq.html"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0",
-        "Host": "www.indianrail.gov.in",
-        "Origin": "http://www.indianrail.gov.in",
-    }
-    r = requests.get(url)
-    if r.status_code == 200 :
-        #then change
-        soup = BeautifulSoup(r.text)
-        if soup.find("form"):
-            return soup.find("form")["action"]
-        else:
-            return False
-    else:
-        return False
+import mechanize
+import cookielib
 
 
 
 class PnrApi:
-    url_pnr = get_correct_url()
-    #url_pnr = "http://www.indianrail.gov.in/cgi_bin/inet_pnstat_cgi_8238.cgi"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:19.0) Gecko/20100101 Firefox/19.0",
-        "Host": "www.indianrail.gov.in",
-        "Origin": "http://www.indianrail.gov.in",
-        "Referer": "http://www.indianrail.gov.in/pnr_Enq.html",
-    }
+    #url_pnr = get_correct_url()
+
     error = ""
 
     def __init__(self, pnr=""):
@@ -44,49 +21,49 @@ class PnrApi:
             self.pnr = pnr
 
     def request(self):
-        request_data = {}
-        random_digit = randint(10000, 99999)
-        request_data["lccp_cap_val"] = random_digit
-        request_data["lccp_capinp_val"] = random_digit
-        request_data["lccp_pnrno1"] = self.pnr
-        request_data["submit"] = "Get Status" #not required
-        try:
-            r = requests.post(PnrApi.url_pnr, request_data, headers=PnrApi.headers)
-        except requests.exceptions.RequestException as e:
-            self.error = str(e)
-            return False
-        if r.status_code == 404:
-            self.error = "404 error, please mail premsinwar4@gmail.com to fix this issue"
-            return False
-        if r.text.find("Please try again later") > 0:
+        url_pnr = "http://www.indianrail.gov.in/pnr_Enq.html"
+        br = mechanize.Browser()
+        br.addheaders = [('User-agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.1) Gecko/2008071615 Fedora/3.0.1-1.fc9 Firefox/3.0.1')]
+        cj = cookielib.LWPCookieJar()
+        br.set_cookiejar(cj)
+        br.set_handle_equiv(True)
+        br.set_handle_gzip(True)
+        br.set_handle_redirect(True)
+        br.set_handle_referer(True)
+        br.set_handle_robots(False)
+        br.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
+
+        br.open("http://www.indianrail.gov.in/pnr_Enq.html")
+        br.select_form(name='pnr_stat')
+        br["lccp_pnrno1"] = self.pnr
+        res = br.submit()
+        content = res.read()
+
+        if content.find("Please try again later") > 0:
             self.error = "Service unavailable 23:30 to 00:30"
             return False
-        elif r.text.find("FLUSHED PNR / PNR NOT YET GENERATED") > 0:
+        elif content.find("FLUSHED PNR / PNR NOT YET GENERATED") > 0:
             self.error = "Wrong PNR"
             return False
-        elif r.text.find("Facility Not Avbl due to Network Connectivity Failure") > 0:
+        elif content.find("Facility Not Avbl due to Network Connectivity Failure") > 0:
             self.error = "Facility not available"
             return False
-        elif r.text.find("This is circular journey authority PNR") > 0:
+        elif content.find("This is circular journey authority PNR") > 0:
             self.error = "Circular Journey"
             return False
-        elif r.text.find("Invalid PNR NO") > 0:
+        elif content.find("Invalid PNR NO") > 0:
             self.error = "Invalid pnr number"
             return False
-        elif r.text.find("The Train Is Cancelled") > 0:
+        elif content.find("The Train Is Cancelled") > 0:
             self.error = "Train cancelled"
             return False
-        elif r.text.find("Passenger Current Status Enquiry") > 0:
-            soup = BeautifulSoup(r.text)
+        elif content.find("Passenger Current Status Enquiry") > 0:
+            soup = BeautifulSoup(content,'html.parser')
             self.__getDetails(soup)
             return True
         else:
             self.error = "Some other error"
             return False
-
-    def perror(self):
-        if self.request == False:
-            return self.error
 
     def __getDetails(self, soup):
         #set pnr
