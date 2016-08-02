@@ -11,3 +11,7 @@ itsdangerous==0.24
 mechanize==0.2.5
 requests==2.10.0
 wsgiref==0.1.2
+selection==0.0.11
+six==1.10.0
+user-agent==0.1.4
+MarkupSafe==0.23
