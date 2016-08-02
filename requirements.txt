@@ -8,5 +8,6 @@ beautifulsoup4==4.5.0
 click==6.6
 gunicorn==19.6.0
 itsdangerous==0.24
+mechanize==0.2.5
 requests==2.10.0
 wsgiref==0.1.2
